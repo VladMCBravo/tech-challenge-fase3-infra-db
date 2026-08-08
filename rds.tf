@@ -1,18 +1,21 @@
 resource "aws_db_subnet_group" "oficina_db_subnet" {
   name       = "oficina-db-subnet"
-  subnet_ids = module.vpc.private_subnets
+  # MUDOU AQUI: Agora ele pega os IDs que o data.tf encontrou na AWS
+  subnet_ids = data.aws_subnets.private_subnets.ids
 }
 
 resource "aws_security_group" "rds_sg" {
   name        = "oficina-rds-sg"
   description = "Permite acesso interno do EKS ao PostgreSQL"
-  vpc_id      = module.vpc.vpc_id
+  # MUDOU AQUI: Agora ele pega o ID da VPC encontrada pelo data.tf
+  vpc_id      = data.aws_vpc.oficina_vpc.id
 
   ingress {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    cidr_blocks = [module.vpc.vpc_cidr_block] # Apenas quem está dentro da VPC acede
+    # MUDOU AQUI: Pega o bloco de IP (CIDR) da VPC encontrada
+    cidr_blocks = [data.aws_vpc.oficina_vpc.cidr_block] 
   }
 }
 
