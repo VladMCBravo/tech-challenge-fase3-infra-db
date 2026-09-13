@@ -5,7 +5,7 @@ resource "aws_db_subnet_group" "oficina_db_subnet" {
 }
 
 resource "aws_security_group" "rds_sg" {
-  name        = "oficina-rds-sg"
+  name        = "oficina-rds-sg-v2"
   description = "Permite acesso interno do EKS ao PostgreSQL"
   # MUDOU AQUI: Agora ele pega o ID da VPC encontrada pelo data.tf
   vpc_id      = data.aws_vpc.oficina_vpc.id
