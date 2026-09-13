@@ -1,5 +1,5 @@
 resource "aws_db_subnet_group" "oficina_db_subnet" {
-  name       = "oficina-db-subnet"
+  name       = "oficina-db-subnet-v2"
   # MUDOU AQUI: Agora ele pega os IDs que o data.tf encontrou na AWS
   subnet_ids = data.aws_subnets.private_subnets.ids
 }
