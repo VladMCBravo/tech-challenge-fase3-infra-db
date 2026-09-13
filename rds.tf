@@ -22,7 +22,7 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_db_instance" "oficina_db" {
   identifier             = "oficina-db-prod"
   engine                 = "postgres"
-  engine_version         = "16.1"
+  engine_version         = "14"
   instance_class         = "db.t3.micro"
   allocated_storage      = 20
   username               = "postgres"
