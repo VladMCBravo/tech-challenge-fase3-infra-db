@@ -1,21 +1,37 @@
 resource "aws_db_subnet_group" "oficina_db_subnet" {
   name       = "oficina-db-subnet-v3"
-  # MUDOU AQUI: Agora ele pega os IDs que o data.tf encontrou na AWS
   subnet_ids = data.aws_subnets.private_subnets.ids
 }
 
 resource "aws_security_group" "rds_sg" {
   name        = "oficina-rds-sg-v3"
-  description = "Permite acesso interno do EKS ao PostgreSQL"
-  # MUDOU AQUI: Agora ele pega o ID da VPC encontrada pelo data.tf
+  description = "Permite acesso interno ao PostgreSQL (EKS e Lambda de auth)"
   vpc_id      = data.aws_vpc.oficina_vpc.id
 
+  # Entrada: PostgreSQL (5432) de dentro da VPC
   ingress {
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    # MUDOU AQUI: Pega o bloco de IP (CIDR) da VPC encontrada
-    cidr_blocks = [data.aws_vpc.oficina_vpc.cidr_block] 
+    cidr_blocks = [data.aws_vpc.oficina_vpc.cidr_block]
+  }
+
+  # Entrada: permite recursos que usam ESTE MESMO SG (a Lambda de auth) na 5432
+  ingress {
+    from_port = 5432
+    to_port   = 5432
+    protocol  = "tcp"
+    self      = true
+  }
+
+  # ⚠️ Saída OBRIGATÓRIA:
+  # A Lambda de autenticação usa ESTE SG e precisa INICIAR a conexão com o RDS.
+  # Sem este bloco, o Terraform remove a saída padrão e a Lambda dá "connect ETIMEDOUT".
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -30,7 +46,7 @@ resource "aws_db_instance" "oficina_db" {
   db_subnet_group_name   = aws_db_subnet_group.oficina_db_subnet.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   skip_final_snapshot    = true
-  publicly_accessible    = false # Segurança máxima: sem acesso direto pela internet
+  publicly_accessible    = false # Segurança: sem acesso direto pela internet
 
   tags = {
     Environment = "tech-challenge"
